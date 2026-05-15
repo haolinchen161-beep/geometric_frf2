@@ -1,0 +1,36 @@
+# ============================================================
+# dataset.yaml — 几何数据训练配置
+# ============================================================
+
+# —— 训练参数 ——
+validation_frequency: 5
+epochs: 500
+
+# —— 频率采样 ——
+freq_sample: True
+freq_limit: 50
+
+# —— 数据集路径 (相对于 data_dir) ——
+data_path_train:
+  - "geometric_train.h5"    # TODO: 替换为实际训练数据
+data_path_val:
+  - "geometric_val.h5"      # TODO: 替换为实际验证数据
+data_paths_test:
+  - "geometric_test.h5"     # TODO: 替换为实际测试数据
+
+# —— 数据集划分 ——
+n_samples: 5000
+n_train_samples: 4000
+n_val_samples: 500
+n_freqs: 300
+
+# —— 最大预测频率数 (null = 全部) ——
+max_frequency: null
+
+# —— 优化器参数 ——
+optimizer:
+  name: "AdamW"
+  kwargs:
+    lr: 0.001
+    weight_decay: 0.00005
+  gradient_clip: 100
