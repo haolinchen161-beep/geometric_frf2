@@ -7,11 +7,11 @@
 # ============================================================
 
 encoder_type: "modal"
-lr: 0.0003
+lr: 0.0005
 
 encoder_kwargs:
   coord_dim: 3
-  point_feat_dim: 6
+  point_feat_dim: 7
   hidden_dim: 256
   n_modes: 2
   trunk_layers: 4
@@ -19,6 +19,6 @@ encoder_kwargs:
   siren_w0: 15.0
   amp_scale: 500000.0
   freq_min: 1.0
-  freq_max: 8000.0
+  freq_max: 3000.0
 
 decoder_kwargs: {}  # modal类型内建物理层, 无需独立解码器
