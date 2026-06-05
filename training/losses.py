@@ -8,11 +8,9 @@ import torch.nn.functional as F
 def modal_loss(omega_pred, omega_target,
                zeta_pred, zeta_target,
                phi_pred, phi_target, batch_idx=None,
-               omega_weight=200.0, zeta_weight=10.0, phi_weight=50.0):
-    """模态参数损失。
+               omega_weight=200.0, zeta_weight=10.0, phi_weight=1.0):
+    """模态参数损失。符号对齐MSE强制匹配振型绝对幅值。"""
 
-    符号对齐MSE强制匹配振型绝对幅值 — MAC只看角度会漏掉振幅坍塌。
-    """
     loss_omega = torch.mean(((omega_pred - omega_target) / (omega_target + 1e-8))**2) * omega_weight
     loss_zeta  = torch.mean(((zeta_pred - zeta_target) / (zeta_target + 1e-8))**2) * zeta_weight
 
@@ -21,7 +19,7 @@ def modal_loss(omega_pred, omega_target,
             phi_pred = phi_pred.view(-1, phi_pred.shape[-1])
             phi_target = phi_target.view(-1, phi_target.shape[-1])
 
-        loss_phi = 0.0
+        raw_phi_mse = 0.0
         num_graphs = int(batch_idx.max().item()) + 1
         for i in range(num_graphs):
             mask = (batch_idx == i)
@@ -29,16 +27,16 @@ def modal_loss(omega_pred, omega_target,
             dot = torch.sum(p_p * p_t, dim=0, keepdim=True)
             sign = torch.sign(dot + 1e-8)
             aligned_t = p_t * sign
-            loss_phi += F.mse_loss(p_p, aligned_t)
-        loss_phi = (loss_phi / num_graphs) * phi_weight
+            raw_phi_mse += F.mse_loss(p_p, aligned_t)
+        raw_phi_mse = raw_phi_mse / num_graphs
     else:
-        # phi: [B,N,K] — 沿N维度逐样本求符号
-        dot = torch.sum(phi_pred * phi_target, dim=1, keepdim=True)  # [B,1,K]
+        dot = torch.sum(phi_pred * phi_target, dim=1, keepdim=True)
         sign = torch.sign(dot + 1e-8)
         aligned_t = phi_target * sign
-        loss_phi = F.mse_loss(phi_pred, aligned_t) * phi_weight
+        raw_phi_mse = F.mse_loss(phi_pred, aligned_t)
 
-    return loss_omega + loss_zeta + loss_phi, loss_omega, loss_zeta, loss_phi
+    loss_phi = raw_phi_mse * phi_weight
+    return loss_omega + loss_zeta + loss_phi, loss_omega, loss_zeta, raw_phi_mse
 
 
 def frf_loss(frf_pred, frf_target):
